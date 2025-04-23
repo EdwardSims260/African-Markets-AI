@@ -39,15 +39,16 @@ def add_logo(logo_path, width=150):
         )
     except Exception:
         st.warning("Logo not found. Using fallback title.")
-        st.title("AFRIMARKETS AI")
+        st.title("AFRI-INVEST AI")
 
-# ===== Dark Theme Setup =====
+# ===== Page Config =====
 st.set_page_config(
-    page_title="Afri-Invest AI",
+    page_title="AFRI-INVEST AI",
     page_icon="🌍",
     layout="wide"
 )
 
+# ===== Global Styling =====
 st.markdown("""
 <style>
     :root {
@@ -59,20 +60,15 @@ st.markdown("""
         background: var(--dark);
         color: white;
     }
-    .metric-card {
-        background: var(--darker);
-        border-radius: 8px;
-        padding: 15px;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# ===== App Header with Logo =====
+# ===== Header =====
 col_logo, col_title = st.columns([0.1, 0.9])
 with col_logo:
-    add_logo("africa_logo.png", width=80)  # Change path as needed
+    add_logo("logo.png", width=80)  # Ensure "logo.png" exists in your app directory
 with col_title:
-    st.title("AFRIMARKETS AI")
+    st.title("AFRI-INVEST AI")
 
 # ===== Main App Logic =====
 try:
@@ -126,7 +122,7 @@ try:
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # AI Analysis Section
+    # AI Insights
     with st.expander("🔍 AI Market Insights", expanded=True):
         st.markdown("""
         **📈 Top Performing Sectors**  
@@ -149,4 +145,4 @@ except Exception:
 
 # ===== Footer =====
 st.markdown("---")
-st.caption("© 2024 Afri-Invest AI | Data from Yahoo Finance")
+st.caption("© 2024 AFRI-INVEST AI | Data from Yahoo Finance")
