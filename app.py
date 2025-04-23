@@ -42,11 +42,7 @@ def add_logo(logo_path, width=150):
         st.title("AFRI-INVEST AI")
 
 # ===== Page Config =====
-st.set_page_config(
-    page_title="AFRI-INVEST AI",
-    page_icon="🌍",
-    layout="wide"
-)
+st.set_page_config(page_title="AFRI-INVEST AI", page_icon="🌍", layout="wide")
 
 # ===== Global Styling =====
 st.markdown("""
@@ -102,6 +98,18 @@ try:
     with col3:
         st.metric("Period", "1 Month")
 
+    # ===== News Feed Section =====
+import feedparser
+
+st.markdown("### 📰 Latest Market News (via Yahoo Finance)")
+
+try:
+    feed = feedparser.parse("https://feeds.finance.yahoo.com/rss/2.0/headline?s=MTNN.JO&region=US&lang=en-US")
+    for entry in feed.entries[:5]:
+        st.markdown(f"🔹 [{entry.title}]({entry.link})")
+except Exception as e:
+    st.warning("⚠️ Could not load news feed. Please check your connection or try again later.")
+
     # Plotly Chart
     data = get_market_data(tickers[country])
     fig = go.Figure()
@@ -133,6 +141,27 @@ try:
         1. MTN Nigeria (MTNN)  
         2. Safaricom (SCOM)  
         """)
+
+with st.expander("📘 Learn: Investing in African Markets", expanded=False):
+    st.markdown("""
+    **🌍 What is the NGXASI?**  
+    The Nigerian Exchange All-Share Index (NGXASI) tracks the general performance of listed stocks on the Nigerian Exchange.
+
+    **📈 How to Invest in African Stocks**  
+    ▸ Use local brokerage platforms like **Chaka**, **Bamboo**, or **Hisa**  
+    ▸ Understand each country’s market rules  
+    ▸ Consider ETFs or Pan-African investment options
+
+    **💡 Smart Tips for Beginners**  
+    - Start with blue-chip or dividend-paying stocks  
+    - Follow macroeconomic trends (e.g., inflation, FX rates)  
+    - Diversify across sectors and countries
+    """)
+
+st.markdown("### 🧠 Market Sentiment")
+
+sentiment = st.radio("How do you feel about the African market this week?", ["📈 Bullish", "📉 Bearish", "😐 Neutral"])
+st.success(f"Your view: {sentiment}")
 
 except Exception:
     st.error(f"""
