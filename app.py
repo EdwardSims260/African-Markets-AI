@@ -43,7 +43,7 @@ def add_logo(logo_path, width=150):
 
 # ===== Dark Theme Setup =====
 st.set_page_config(
-    page_title="AfriMarkets AI",
+    page_title="Afri-Invest AI",
     page_icon="🌍",
     layout="wide"
 )
@@ -149,4 +149,4 @@ except Exception:
 
 # ===== Footer =====
 st.markdown("---")
-st.caption("© 2024 AfriMarkets AI | Data from Yahoo Finance")
+st.caption("© 2024 Afri-Invest AI | Data from Yahoo Finance")
