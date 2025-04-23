@@ -60,7 +60,7 @@ def get_recommended_stocks(country):
     return recommendations.get(country, ("Not available", "Not available"))
 
 # ===== Page Config =====
-st.set_page_config(page_title="AFRI-INVEST AI", page_icon="🌍", layout="wide",server_header="X-Frame-Options DENY")
+st.set_page_config(page_title="AFRI-INVEST AI", page_icon="🌍", layout="wide")
 
 # ===== Global Styling =====
 st.markdown("""
