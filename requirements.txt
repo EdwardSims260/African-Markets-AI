@@ -1,5 +1,5 @@
-feedparser>=6.0.8
-yfinance>=0.2.18
-streamlit>=1.22.0
-plotly>=5.13.0
-Pillow>=9.4.0
+streamlit
+yfinance
+plotly
+Pillow
+feedparser
