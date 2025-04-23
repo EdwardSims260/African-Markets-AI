@@ -8,15 +8,13 @@ from traceback import format_exc
 
 # ===== Logo Loader =====
 def add_logo(logo_path, width=150):
-    """Embed your Canva logo in the app with transparent background support."""
+    """Embed a logo with transparent background support."""
     try:
         logo = Image.open(logo_path)
-        
-        # Convert to base64
         buffered = io.BytesIO()
         logo.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode()
-        
+
         st.markdown(
             f"""
             <style>
@@ -39,8 +37,8 @@ def add_logo(logo_path, width=150):
             """,
             unsafe_allow_html=True,
         )
-    except Exception as e:
-        st.warning(f"Logo not found at {logo_path}. Using text header instead.")
+    except Exception:
+        st.warning("Logo not found. Using fallback title.")
         st.title("AFRIMARKETS AI")
 
 # ===== Dark Theme Setup =====
@@ -65,12 +63,14 @@ st.markdown("""
         background: var(--darker);
         border-radius: 8px;
         padding: 15px;
-       
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # ===== App Header with Logo =====
 col_logo, col_title = st.columns([0.1, 0.9])
 with col_logo:
-    st.markdown(AFRICA_LOGO, unsafe_allow_html=True)
+    add_logo("africa_logo.png", width=80)  # Change path as needed
 with col_title:
     st.title("AFRIMARKETS AI")
 
@@ -87,13 +87,13 @@ try:
     tickers = {
         "Nigeria": "NGXASI",
         "South Africa": "^JTOPI",
-        "Kenya": "NSE20",
+        "Kenya": "NSE20.NSE",
         "Egypt": "EGX30",
-        "Morocco": "MSI20"
+        "Morocco": "MSI20.CS"
     }
 
     # Cached Data Fetch
-    @st.cache_data(ttl=3600)  # Cache for 1 hour
+    @st.cache_data(ttl=3600)
     def get_market_data(ticker):
         return yf.Ticker(ticker).history(period="1mo")
 
@@ -107,41 +107,38 @@ try:
         st.metric("Period", "1 Month")
 
     # Plotly Chart
-    with st.container():
-        st.markdown('<div class="market-card">', unsafe_allow_html=True)
-        st.write(f"### 📈 {country} Market Performance")
-        
-        data = get_market_data(tickers[country])
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=data.index,
-            y=data['Close'],
-            line=dict(color="#FFD700", width=3),
-            name="Closing Price"
-        ))
-        
-        fig.update_layout(
-            plot_bgcolor="#0A0C10",
-            paper_bgcolor="#0A0C10",
-            font=dict(color="white"),
-            hovermode="x unified"
-        )
-        st.plotly_chart(fig, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+    data = get_market_data(tickers[country])
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=data.index,
+        y=data['Close'],
+        line=dict(color="#FFD700", width=3),
+        name="Closing Price"
+    ))
+
+    fig.update_layout(
+        title=f"{country} Market Trend",
+        plot_bgcolor="#0A0C10",
+        paper_bgcolor="#0A0C10",
+        font=dict(color="white"),
+        hovermode="x unified"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
     # AI Analysis Section
     with st.expander("🔍 AI Market Insights", expanded=True):
-        st.write("""
+        st.markdown("""
         **📈 Top Performing Sectors**  
         ▸ Financial Services (+12% YTD)  
         ▸ Telecommunications (+8% YTD)  
-        
+
         **💎 Recommended Stocks**  
         1. MTN Nigeria (MTNN)  
         2. Safaricom (SCOM)  
         """)
 
-except Exception as e:
+except Exception:
     st.error(f"""
     **⚠️ Application Error**  
     ```python
@@ -150,6 +147,6 @@ except Exception as e:
     """)
     st.stop()
 
-# Footer
+# ===== Footer =====
 st.markdown("---")
 st.caption("© 2024 AfriMarkets AI | Data from Yahoo Finance")
