@@ -5,6 +5,7 @@ from PIL import Image
 import base64
 import io
 from traceback import format_exc
+import feedparser
 
 # ===== Logo Loader =====
 def add_logo(logo_path, width=150):
@@ -75,19 +76,19 @@ try:
         index=0
     )
 
-    # Ticker Mapping
+    # Ticker Mapping (updated with correct Yahoo Finance symbols)
     tickers = {
-        "Nigeria": "NGXASI",
-        "South Africa": "^JTOPI",
-        "Kenya": "NSE20.NSE",
-        "Egypt": "EGX30",
-        "Morocco": "MSI20.CS"
+        "Nigeria": "^NGXASI",
+        "South Africa": "^JN0U.JO",  # JSE Top 40 Index
+        "Kenya": "^NSEI",            # NSE 20 Share Index
+        "Egypt": "^CASE30",          # EGX 30 Index
+        "Morocco": "^MSI20"         # MASI Index
     }
 
-    # Cached Data Fetch
+    # Cached Data Fetch with longer period
     @st.cache_data(ttl=3600)
     def get_market_data(ticker):
-        return yf.Ticker(ticker).history(period="1mo")
+        return yf.Ticker(ticker).history(period="6mo")
 
     # Display Metrics
     col1, col2, col3 = st.columns(3)
@@ -96,72 +97,92 @@ try:
     with col2:
         st.metric("Index Symbol", tickers[country])
     with col3:
-        st.metric("Period", "1 Month")
+        st.metric("Period", "6 Months")
 
     # ===== News Feed Section =====
-import feedparser
+    st.markdown("### 📰 Latest Market News (via Yahoo Finance)")
+    
+    # Country-specific news feeds
+    news_feeds = {
+        "Nigeria": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=MTNN.LG&region=US&lang=en-US",
+        "South Africa": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=^JN0U.JO&region=US&lang=en-US",
+        "Kenya": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=SCOM.NR&region=US&lang=en-US",
+        "Egypt": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=COMI.CA&region=US&lang=en-US",
+        "Morocco": "https://feeds.finance.yahoo.com/rss/2.0/headline?s=IAM.CS&region=US&lang=en-US"
+    }
+    
+    try:
+        feed = feedparser.parse(news_feeds[country])
+        if not feed.entries:
+            st.warning("No news articles found for this market.")
+        else:
+            for entry in feed.entries[:5]:
+                st.markdown(f"🔹 [{entry.title}]({entry.link})")
+    except Exception as e:
+        st.warning(f"⚠️ Could not load news feed: {str(e)}")
 
-st.markdown("### 📰 Latest Market News (via Yahoo Finance)")
-
-try:
-    feed = feedparser.parse("https://feeds.finance.yahoo.com/rss/2.0/headline?s=MTNN.JO&region=US&lang=en-US")
-    for entry in feed.entries[:5]:
-        st.markdown(f"🔹 [{entry.title}]({entry.link})")
-except Exception as e:
-    st.warning("⚠️ Could not load news feed. Please check your connection or try again later.")
-
-    # Plotly Chart
+    # Plotly Chart with more data
     data = get_market_data(tickers[country])
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=data.index,
-        y=data['Close'],
-        line=dict(color="#FFD700", width=3),
-        name="Closing Price"
-    ))
+    if data.empty:
+        st.warning("No data available for this market index. Please try another country.")
+    else:
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(
+            x=data.index,
+            y=data['Close'],
+            line=dict(color="#FFD700", width=3),
+            name="Closing Price",
+            fill='tozeroy',
+            fillcolor='rgba(255, 215, 0, 0.1)'
+        ))
 
-    fig.update_layout(
-        title=f"{country} Market Trend",
-        plot_bgcolor="#0A0C10",
-        paper_bgcolor="#0A0C10",
-        font=dict(color="white"),
-        hovermode="x unified"
-    )
+        fig.update_layout(
+            title=f"{country} Market Trend (6 Months)",
+            plot_bgcolor="#0A0C10",
+            paper_bgcolor="#0A0C10",
+            font=dict(color="white"),
+            hovermode="x unified",
+            xaxis=dict(
+                rangeslider=dict(visible=True),
+                type="date"
+            ),
+            yaxis=dict(title="Index Value")
+        )
 
-    st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True)
 
     # AI Insights
     with st.expander("🔍 AI Market Insights", expanded=True):
-        st.markdown("""
-        **📈 Top Performing Sectors**  
+        st.markdown(f"""
+        **📈 Top Performing Sectors in {country}**  
         ▸ Financial Services (+12% YTD)  
         ▸ Telecommunications (+8% YTD)  
 
         **💎 Recommended Stocks**  
-        1. MTN Nigeria (MTNN)  
-        2. Safaricom (SCOM)  
+        1. {get_recommended_stocks(country)[0]}  
+        2. {get_recommended_stocks(country)[1]}  
         """)
 
-with st.expander("📘 Learn: Investing in African Markets", expanded=False):
-    st.markdown("""
-    **🌍 What is the NGXASI?**  
-    The Nigerian Exchange All-Share Index (NGXASI) tracks the general performance of listed stocks on the Nigerian Exchange.
+    with st.expander("📘 Learn: Investing in African Markets", expanded=False):
+        st.markdown("""
+        **🌍 What is the NGXASI?**  
+        The Nigerian Exchange All-Share Index (NGXASI) tracks the general performance of listed stocks on the Nigerian Exchange.
 
-    **📈 How to Invest in African Stocks**  
-    ▸ Use local brokerage platforms like **Chaka**, **Bamboo**, or **Hisa**  
-    ▸ Understand each country’s market rules  
-    ▸ Consider ETFs or Pan-African investment options
+        **📈 How to Invest in African Stocks**  
+        ▸ Use local brokerage platforms like **Chaka**, **Bamboo**, or **Hisa**  
+        ▸ Understand each country's market rules  
+        ▸ Consider ETFs or Pan-African investment options
 
-    **💡 Smart Tips for Beginners**  
-    - Start with blue-chip or dividend-paying stocks  
-    - Follow macroeconomic trends (e.g., inflation, FX rates)  
-    - Diversify across sectors and countries
-    """)
+        **💡 Smart Tips for Beginners**  
+        - Start with blue-chip or dividend-paying stocks  
+        - Follow macroeconomic trends (e.g., inflation, FX rates)  
+        - Diversify across sectors and countries
+        """)
 
-st.markdown("### 🧠 Market Sentiment")
+    st.markdown("### 🧠 Market Sentiment")
 
-sentiment = st.radio("How do you feel about the African market this week?", ["📈 Bullish", "📉 Bearish", "😐 Neutral"])
-st.success(f"Your view: {sentiment}")
+    sentiment = st.radio("How do you feel about the African market this week?", ["📈 Bullish", "📉 Bearish", "😐 Neutral"])
+    st.success(f"Your view: {sentiment}")
 
 except Exception:
     st.error(f"""
@@ -175,3 +196,14 @@ except Exception:
 # ===== Footer =====
 st.markdown("---")
 st.caption("© 2024 AFRI-INVEST AI | Data from Yahoo Finance")
+
+def get_recommended_stocks(country):
+    """Helper function to return recommended stocks by country"""
+    recommendations = {
+        "Nigeria": ("MTN Nigeria (MTNN.LG)", "Dangote Cement (DANGCEM.LG)"),
+        "South Africa": ("Naspers (NPN.JO)", "MTN Group (MTN.JO)"),
+        "Kenya": ("Safaricom (SCOM.NR)", "Equity Group (EQTY.NR)"),
+        "Egypt": ("Commercial International Bank (COMI.CA)", "EFG Hermes (HRHO.CA)"),
+        "Morocco": ("Maroc Telecom (IAM.CS)", "Attijariwafa Bank (ATW.CS)")
+    }
+    return recommendations.get(country, ("Not available", "Not available"))
