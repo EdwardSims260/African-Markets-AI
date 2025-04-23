@@ -3,14 +3,45 @@ import yfinance as yf
 import plotly.graph_objects as go
 from PIL import Image
 import base64
+import io
 from traceback import format_exc
 
-# ===== Africa Logo (Gold SVG) =====
-AFRICA_LOGO = """
-<svg viewBox="0 0 100 100" width="50" xmlns="http://www.w3.org/2000/svg">
-  <path fill="#FFD700" d="M50,10 L60,30 L70,25 L75,40 L85,35 L80,50 L90,60 L75,70 L65,65 L55,75 L45,65 L35,75 L25,65 L15,70 L5,50 L15,30 Z"/>
-</svg>
-"""
+# ===== Logo Loader =====
+def add_logo(logo_path, width=150):
+    """Embed your Canva logo in the app with transparent background support."""
+    try:
+        logo = Image.open(logo_path)
+        
+        # Convert to base64
+        buffered = io.BytesIO()
+        logo.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        
+        st.markdown(
+            f"""
+            <style>
+                .logo-container {{
+                    display: flex;
+                    justify-content: center;
+                    margin: 10px 0 25px 0;
+                }}
+                .logo-img {{
+                    width: {width}px;
+                    transition: transform 0.2s;
+                }}
+                .logo-img:hover {{
+                    transform: scale(1.05);
+                }}
+            </style>
+            <div class="logo-container">
+                <img class="logo-img" src="data:image/png;base64,{img_str}">
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    except Exception as e:
+        st.warning(f"Logo not found at {logo_path}. Using text header instead.")
+        st.title("AFRIMARKETS AI")
 
 # ===== Dark Theme Setup =====
 st.set_page_config(
@@ -19,40 +50,22 @@ st.set_page_config(
     layout="wide"
 )
 
-st.markdown(f"""
+st.markdown("""
 <style>
-    :root {{
+    :root {
         --gold: #FFD700;
         --dark: #0E1117;
         --darker: #0A0C10;
-    }}
-    .stApp {{
+    }
+    .stApp {
         background: var(--dark);
         color: white;
-    }}
-    h1, h2, h3 {{ color: var(--gold) !important; }}
-    .stSelectbox, .stSlider label {{ color: white !important; }}
-    .stButton>button {{
+    }
+    .metric-card {
         background: var(--darker);
-        color: var(--gold);
-        border: 1px solid var(--gold);
-        border-radius: 5px;
-    }}
-    .stButton>button:hover {{
-        background: var(--gold) !important;
-        color: var(--dark) !important;
-    }}
-    .market-card {{
-        background: var(--darker);
-        border-radius: 10px;
-        padding: 20px;
-        border-left: 4px solid var(--gold);
-    }}
-    .stMetric {{
-        border-bottom: 2px solid var(--gold);
-    }}
-</style>
-""", unsafe_allow_html=True)
+        border-radius: 8px;
+        padding: 15px;
+       
 
 # ===== App Header with Logo =====
 col_logo, col_title = st.columns([0.1, 0.9])
